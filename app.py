@@ -2,7 +2,7 @@ import streamlit as st
 import plotly.graph_objects as go
 from stock import get_stock_price, get_historical_prices
 
-st.title("Stock Price Viewer")
+st.title("Chen Li's AI Stock Analyzer")
 
 ticker = st.text_input("Enter ticker symbol", value="AAPL").upper()
 
@@ -39,3 +39,4 @@ if st.button("Fetch"):
 
             with st.expander("Raw data"):
                 st.dataframe(hist[["Open", "High", "Low", "Close", "Volume"]])
+st.caption("Built with AI (Claude + Python)")
