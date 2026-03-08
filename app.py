@@ -39,4 +39,35 @@ if st.button("Fetch"):
 
             with st.expander("Raw data"):
                 st.dataframe(hist[["Open", "High", "Low", "Close", "Volume"]])
+                st.subheader("Advanced Analysis")
+
+analysis = advanced_analysis(hist)
+
+st.text(analysis)
 st.caption("Built with AI (Claude + Python)")
+
+import numpy as np
+
+def advanced_analysis(hist):
+
+    close = hist["Close"]
+
+    change_5d = (close.iloc[-1] - close.iloc[-5]) / close.iloc[-5] * 100
+
+    ma20 = close.rolling(20).mean().iloc[-1]
+
+    volatility = close.pct_change().std() * np.sqrt(252) * 100
+
+    trend = "UP" if close.iloc[-1] > close.iloc[-5] else "DOWN"
+
+    summary = f"""
+Trend: {trend}
+
+5-day change: {change_5d:.2f}%
+
+Price vs 20-day MA: {"Above" if close.iloc[-1] > ma20 else "Below"}
+
+Annualized volatility: {volatility:.2f}%
+"""
+
+    return summary
