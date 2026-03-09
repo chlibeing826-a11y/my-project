@@ -1,6 +1,19 @@
 import yfinance as yf
 
 
+def search_ticker(query: str) -> list:
+    """Search by company name or ticker symbol, return up to 6 matches."""
+    results = yf.Search(query, max_results=6)
+    matches = []
+    for q in results.quotes:
+        symbol = q.get("symbol", "")
+        name = q.get("longname") or q.get("shortname", "")
+        exchange = q.get("exchange", "")
+        if symbol:
+            matches.append({"ticker": symbol, "name": name, "exchange": exchange})
+    return matches
+
+
 def get_stock_price(ticker: str) -> dict:
     stock = yf.Ticker(ticker)
     hist = stock.history(period="1d")

@@ -2,7 +2,7 @@ import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 
-from stock import get_historical_prices, get_stock_price
+from stock import get_historical_prices, get_stock_price, search_ticker
 
 
 def advanced_analysis(hist):
@@ -75,7 +75,28 @@ def advanced_analysis(hist):
 
 st.title("Chen Li's AI Stock Analyzer")
 
-ticker = st.text_input("Enter ticker symbol", value="AAPL").upper()
+# --- Stock search ---
+query = st.text_input("Search by ticker or company name (e.g. Tesla, NVDA)", value="")
+
+if "selected_ticker" not in st.session_state:
+    st.session_state.selected_ticker = "AAPL"
+
+if st.button("Search"):
+    if query.strip():
+        with st.spinner("Searching..."):
+            matches = search_ticker(query.strip())
+        if matches:
+            options = {
+                f"{m['ticker']} — {m['name']} ({m['exchange']})": m["ticker"]
+                for m in matches
+            }
+            choice = st.selectbox("Select a stock", list(options.keys()))
+            st.session_state.selected_ticker = options[choice]
+        else:
+            st.warning(f"No results found for '{query}'. Try a different name or ticker.")
+
+ticker = st.session_state.selected_ticker
+st.caption(f"Selected: **{ticker}**")
 
 period = st.selectbox(
     "Historical period",
