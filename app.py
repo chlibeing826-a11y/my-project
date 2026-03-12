@@ -303,7 +303,12 @@ if st.session_state.data_loaded:
         desc = fund.get("description", "")
         if desc:
             with st.expander("Company Description", expanded=True):
-                st.write(desc)
+                sentences = [s.strip() for s in desc.replace("  ", " ").split(". ") if s.strip()]
+                paragraphs = [". ".join(sentences[i:i+3]) for i in range(0, len(sentences), 3)]
+                for para in paragraphs:
+                    if not para.endswith("."):
+                        para += "."
+                    st.write(para)
 
     # ── Tab 2: Fundamentals ──────────────────────────────────────
     with tab2:
