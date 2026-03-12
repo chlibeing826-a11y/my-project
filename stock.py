@@ -47,6 +47,8 @@ def get_fundamentals(ticker: str) -> dict:
         "gross_margin": info.get("grossMargins"),    # decimal
         "revenue_growth": info.get("revenueGrowth"), # decimal YoY
         "description": info.get("longBusinessSummary", ""),
+        "logo_url": info.get("logo_url", ""),
+        "website": info.get("website", ""),
     }
 
 

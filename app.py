@@ -291,7 +291,21 @@ if st.session_state.data_loaded:
 
     # ── Tab 1: Overview ──────────────────────────────────────────
     with tab1:
-        st.subheader(fund.get("name", ticker))
+        logo_url = fund.get("logo_url", "")
+        if not logo_url:
+            website = fund.get("website", "")
+            if website:
+                domain = website.replace("https://", "").replace("http://", "").split("/")[0]
+                logo_url = f"https://logo.clearbit.com/{domain}"
+
+        if logo_url:
+            col_logo, col_name = st.columns([1, 8])
+            with col_logo:
+                st.image(logo_url, width=64)
+            with col_name:
+                st.subheader(fund.get("name", ticker))
+        else:
+            st.subheader(fund.get("name", ticker))
 
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("Current Price", f"${price_data['price']}" if price_data["price"] else "N/A")
