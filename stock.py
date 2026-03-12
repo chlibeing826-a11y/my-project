@@ -79,6 +79,12 @@ def get_long_history(ticker: str, period: str = "10y"):
     return stock.history(period=period)
 
 
+def get_spy_history(period: str = "10y"):
+    """Fetch SPY (S&P 500 ETF) long-term price history for benchmarking."""
+    spy = yf.Ticker("SPY")
+    return spy.history(period=period)
+
+
 def analyze_trend(ticker: str) -> None:
     stock = yf.Ticker(ticker)
     hist = stock.history(period="5d", interval="1d")
