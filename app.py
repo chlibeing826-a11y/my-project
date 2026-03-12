@@ -431,7 +431,7 @@ if st.session_state.data_loaded:
         if long_hist is None or long_hist.empty:
             st.info("Long-term historical data is not available for this stock.")
         else:
-            years_available = max(1, int((long_hist.index[-1] - long_hist.index[0]).days / 365))
+            years_available = max(1, round((long_hist.index[-1] - long_hist.index[0]).days / 365))
             max_years = min(10, years_available)
 
             col_ctrl, col_chart = st.columns([1, 2])
