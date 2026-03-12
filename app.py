@@ -13,9 +13,9 @@ from stock import (
 )
 
 # ── Page config ───────────────────────────────────────────────────
-st.set_page_config(page_title="长期价值投资分析仪", page_icon="📈", layout="wide")
-st.title("📈 长期价值投资分析仪")
-st.caption("专为价值投资新手设计 · 看公司基本面，不看短线涨跌")
+st.set_page_config(page_title="Long-Term Value Investing Analyzer", page_icon="📈", layout="wide")
+st.title("📈 Long-Term Value Investing Analyzer")
+st.caption("Designed for value investing beginners · Focus on fundamentals, not short-term price movements")
 
 
 # ── Helper functions ──────────────────────────────────────────────
@@ -35,47 +35,47 @@ def fmt_num(n):
 def traffic_light(key, value):
     """Return (emoji, label) for a metric based on value investing thresholds."""
     if value is None:
-        return "⚪", "暂无数据"
+        return "⚪", "No data"
 
     # Lower is better
     low_better = {
         "pe_ratio": [
-            (15, "🟢", "价格便宜"),
-            (25, "🟡", "估值合理"),
-            (float("inf"), "🔴", "价格偏贵"),
+            (15, "🟢", "Cheap valuation"),
+            (25, "🟡", "Fair valuation"),
+            (float("inf"), "🔴", "Expensive"),
         ],
         "pb_ratio": [
-            (1.5, "🟢", "低于净资产"),
-            (3.0, "🟡", "估值合理"),
-            (float("inf"), "🔴", "价格偏贵"),
+            (1.5, "🟢", "Below book value"),
+            (3.0, "🟡", "Fair valuation"),
+            (float("inf"), "🔴", "Expensive"),
         ],
         "debt_to_equity": [
-            (50, "🟢", "负债健康"),
-            (150, "🟡", "负债适中"),
-            (float("inf"), "🔴", "负债偏高"),
+            (50, "🟢", "Healthy debt"),
+            (150, "🟡", "Moderate debt"),
+            (float("inf"), "🔴", "High debt"),
         ],
     }
     # Higher is better
     high_better = {
         "roe": [
-            (0.15, "🟢", "盈利能力强"),
-            (0.08, "🟡", "盈利能力一般"),
-            (0.0, "🔴", "盈利能力弱"),
+            (0.15, "🟢", "Strong profitability"),
+            (0.08, "🟡", "Average profitability"),
+            (0.0, "🔴", "Weak profitability"),
         ],
         "profit_margin": [
-            (0.15, "🟢", "利润率优秀"),
-            (0.05, "🟡", "利润率一般"),
-            (0.0, "🔴", "利润率偏低"),
+            (0.15, "🟢", "Excellent margin"),
+            (0.05, "🟡", "Average margin"),
+            (0.0, "🔴", "Low margin"),
         ],
         "gross_margin": [
-            (0.40, "🟢", "护城河宽"),
-            (0.20, "🟡", "护城河一般"),
-            (0.0, "🔴", "护城河窄"),
+            (0.40, "🟢", "Wide moat"),
+            (0.20, "🟡", "Narrow moat"),
+            (0.0, "🔴", "No moat"),
         ],
     }
 
     if key == "free_cashflow":
-        return ("🟢", "现金流健康") if value > 0 else ("🔴", "现金流为负")
+        return ("🟢", "Healthy cash flow") if value > 0 else ("🔴", "Negative cash flow")
 
     if key in low_better:
         for thresh, emoji, label in low_better[key]:
@@ -86,20 +86,20 @@ def traffic_light(key, value):
         for thresh, emoji, label in high_better[key]:
             if value >= thresh:
                 return emoji, label
-        return "🔴", "数值为负"
+        return "🔴", "Negative value"
 
-    return "⚪", "暂无数据"
+    return "⚪", "No data"
 
 
 # (label, format_fn, plain-language explanation)
 METRIC_INFO = {
-    "pe_ratio":       ("市盈率 (P/E)",      lambda v: f"{v:.1f}x",     "你花多少钱买公司每年1元利润，越低越便宜。"),
-    "pb_ratio":       ("市净率 (P/B)",      lambda v: f"{v:.2f}x",     "股价相对公司净资产的倍数，低于1说明可能被低估。"),
-    "roe":            ("净资产回报率 (ROE)", lambda v: f"{v*100:.1f}%", "公司用股东的钱每年赚多少回来，巴菲特要求长期 > 15%。"),
-    "debt_to_equity": ("负债率 (D/E)",      lambda v: f"{v/100:.2f}",  "公司借了多少钱相对自己有多少钱，越低越稳健。"),
-    "profit_margin":  ("净利率",            lambda v: f"{v*100:.1f}%", "每赚100元收入最终留下多少净利润，越高代表定价权越强。"),
-    "gross_margin":   ("毛利率（护城河）",   lambda v: f"{v*100:.1f}%", "扣除直接成本后的利润率，高毛利往往意味着竞争优势。"),
-    "free_cashflow":  ("自由现金流",         fmt_num,                   "公司真实赚到手的钱（扣除资本支出），正数才算真赚钱。"),
+    "pe_ratio":       ("P/E Ratio",          lambda v: f"{v:.1f}x",     "How much you pay for $1 of annual earnings. Lower means cheaper."),
+    "pb_ratio":       ("P/B Ratio",          lambda v: f"{v:.2f}x",     "Price relative to net assets. Below 1 may indicate undervaluation."),
+    "roe":            ("Return on Equity",   lambda v: f"{v*100:.1f}%", "How much profit the company generates from shareholders' money. Buffett wants > 15%."),
+    "debt_to_equity": ("Debt/Equity Ratio",  lambda v: f"{v/100:.2f}",  "How much debt the company carries relative to equity. Lower is safer."),
+    "profit_margin":  ("Net Profit Margin",  lambda v: f"{v*100:.1f}%", "How much net profit is kept from each dollar of revenue. Higher means stronger pricing power."),
+    "gross_margin":   ("Gross Margin (Moat)", lambda v: f"{v*100:.1f}%", "Profit after direct costs. High gross margin often signals a competitive advantage."),
+    "free_cashflow":  ("Free Cash Flow",     fmt_num,                   "Real cash generated after capital expenditures. Positive means the business truly makes money."),
 }
 
 
@@ -109,50 +109,50 @@ def buffett_checks(fund):
 
     roe = fund.get("roe")
     checks.append({
-        "name": "ROE 持续盈利能力强（> 15%）",
+        "name": "Strong ROE (> 15%)",
         "passed": roe is not None and roe > 0.15,
-        "detail": f"当前 ROE: {roe*100:.1f}%" if roe is not None else "数据不足",
-        "tip": "巴菲特偏好 ROE 长期超过15%的公司，说明管理层善用股东资金持续创造价值。",
+        "detail": f"Current ROE: {roe*100:.1f}%" if roe is not None else "Insufficient data",
+        "tip": "Buffett favors companies with ROE consistently above 15%, indicating management uses shareholder capital effectively.",
     })
 
     de = fund.get("debt_to_equity")
     checks.append({
-        "name": "负债率低（D/E < 0.5）",
+        "name": "Low Debt (D/E < 0.5)",
         "passed": de is not None and de < 50,
-        "detail": f"当前 D/E: {de/100:.2f}" if de is not None else "数据不足",
-        "tip": "低负债让公司在经济下行时也能存活，不依赖借钱运营，抗风险能力更强。",
+        "detail": f"Current D/E: {de/100:.2f}" if de is not None else "Insufficient data",
+        "tip": "Low debt allows a company to survive economic downturns without relying on borrowing to operate.",
     })
 
     pm = fund.get("profit_margin")
     checks.append({
-        "name": "净利率健康（> 10%）",
+        "name": "Healthy Net Margin (> 10%)",
         "passed": pm is not None and pm > 0.10,
-        "detail": f"当前净利率: {pm*100:.1f}%" if pm is not None else "数据不足",
-        "tip": "健康的净利率说明公司有定价权，不只是在赚吆喝，真正有利润留下来。",
+        "detail": f"Current margin: {pm*100:.1f}%" if pm is not None else "Insufficient data",
+        "tip": "A healthy net margin shows the company has real pricing power and retains meaningful profit.",
     })
 
     gm = fund.get("gross_margin")
     checks.append({
-        "name": "高毛利率，护城河宽（> 40%）",
+        "name": "Wide Moat — High Gross Margin (> 40%)",
         "passed": gm is not None and gm > 0.40,
-        "detail": f"当前毛利率: {gm*100:.1f}%" if gm is not None else "数据不足",
-        "tip": "高毛利通常意味着品牌、技术或规模优势，让竞争对手很难抢走客户。",
+        "detail": f"Current gross margin: {gm*100:.1f}%" if gm is not None else "Insufficient data",
+        "tip": "High gross margin usually means brand, technology, or scale advantages that are hard for competitors to replicate.",
     })
 
     fcf = fund.get("free_cashflow")
     checks.append({
-        "name": "自由现金流为正",
+        "name": "Positive Free Cash Flow",
         "passed": fcf is not None and fcf > 0,
-        "detail": f"当前自由现金流: {fmt_num(fcf)}" if fcf is not None else "数据不足",
-        "tip": "利润数字可以被会计粉饰，但现金流很难造假。巴菲特最重视这个指标。",
+        "detail": f"Current FCF: {fmt_num(fcf)}" if fcf is not None else "Insufficient data",
+        "tip": "Earnings can be manipulated by accounting, but cash flow is hard to fake. Buffett considers this the most important metric.",
     })
 
     pe = fund.get("pe_ratio")
     checks.append({
-        "name": "估值合理（P/E < 25）",
+        "name": "Reasonable Valuation (P/E < 25)",
         "passed": pe is not None and 0 < pe < 25,
-        "detail": f"当前 P/E: {pe:.1f}x" if pe is not None else "数据不足",
-        "tip": "即使是好公司，买贵了也很难赚钱。巴菲特说：「以合理价格买入优秀公司」。",
+        "detail": f"Current P/E: {pe:.1f}x" if pe is not None else "Insufficient data",
+        "tip": "Even great companies are hard to profit from if bought at too high a price. Buffett says: 'Buy a wonderful company at a fair price.'",
     })
 
     return checks
@@ -166,54 +166,54 @@ def build_ai_prompt(ticker, fund, checks):
         return fmt(v) if v is not None else "N/A"
 
     metrics = "\n".join([
-        f"  - 市值: {fmt_num(fund.get('market_cap'))}",
-        f"  - 市盈率 P/E: {safe('pe_ratio', lambda v: f'{v:.1f}x')}",
-        f"  - 市净率 P/B: {safe('pb_ratio', lambda v: f'{v:.2f}x')}",
+        f"  - Market Cap: {fmt_num(fund.get('market_cap'))}",
+        f"  - P/E Ratio: {safe('pe_ratio', lambda v: f'{v:.1f}x')}",
+        f"  - P/B Ratio: {safe('pb_ratio', lambda v: f'{v:.2f}x')}",
         f"  - ROE: {safe('roe', lambda v: f'{v*100:.1f}%')}",
-        f"  - 负债率 D/E: {safe('debt_to_equity', lambda v: f'{v/100:.2f}')}",
-        f"  - 净利率: {safe('profit_margin', lambda v: f'{v*100:.1f}%')}",
-        f"  - 毛利率: {safe('gross_margin', lambda v: f'{v*100:.1f}%')}",
-        f"  - 自由现金流: {fmt_num(fund.get('free_cashflow'))}",
-        f"  - 巴菲特六项评分: {score}/6",
+        f"  - Debt/Equity: {safe('debt_to_equity', lambda v: f'{v/100:.2f}')}",
+        f"  - Net Margin: {safe('profit_margin', lambda v: f'{v*100:.1f}%')}",
+        f"  - Gross Margin: {safe('gross_margin', lambda v: f'{v*100:.1f}%')}",
+        f"  - Free Cash Flow: {fmt_num(fund.get('free_cashflow'))}",
+        f"  - Buffett Score: {score}/6",
     ])
 
     desc = fund.get("description", "")
-    desc_line = f"\n公司描述：{desc[:400]}..." if desc else ""
+    desc_line = f"\nCompany Description: {desc[:400]}..." if desc else ""
 
-    return f"""你是一位专业的价值投资顾问，请用简单易懂的中文（面向完全没有金融背景的新手投资者）分析以下美股：
+    return f"""You are a professional value investing advisor. Please analyze the following US stock in simple, beginner-friendly English for someone with no financial background:
 
-股票代码：{ticker}
-公司名称：{fund.get('name', ticker)}
-行业：{fund.get('sector', 'N/A')} / {fund.get('industry', 'N/A')}{desc_line}
+Ticker: {ticker}
+Company: {fund.get('name', ticker)}
+Sector: {fund.get('sector', 'N/A')} / {fund.get('industry', 'N/A')}{desc_line}
 
-基本面数据：
+Fundamental Data:
 {metrics}
 
-请按以下结构作答（每点2-3句话，遇到专业术语时请在括号内附上通俗解释）：
+Please structure your response as follows (2-3 sentences per point, explain any jargon in plain terms):
 
-**1. 公司简介**
-这是什么公司，主要做什么业务？普通人生活中会接触到它吗？
+**1. Company Overview**
+What does this company do? Would an average person encounter it in daily life?
 
-**2. 财务健康状况**
-综合各项数据，这家公司财务上健不健康？有没有什么需要注意的地方？
+**2. Financial Health**
+Based on the data, is this company financially healthy? Any red flags to watch out for?
 
-**3. 护城河分析**
-这家公司凭什么让竞争对手很难抢走它的客户？护城河宽不宽？
+**3. Competitive Moat**
+What makes this company hard to compete against? How wide is its moat?
 
-**4. 当前估值判断**
-现在这个价格买入贵不贵？是捡到便宜了，还是需要等等再看？
+**4. Current Valuation**
+Is the current price expensive or cheap? Is now a good time to buy, or is it better to wait?
 
-**5. 适合人群**
-这只股票适合什么类型的投资者？（例如：稳健保守型/追求成长型/不适合新手等）
+**5. Who Is This For?**
+What type of investor suits this stock? (e.g., conservative/growth-oriented/not for beginners)
 
-**6. 一句话建议**
-如果只能说一句话，你会对想买这只股票的新手说什么？
+**6. One-Sentence Advice**
+If you could say just one thing to a beginner considering this stock, what would it be?
 
-最后给出综合评级（只选一个）：
-⭐⭐⭐⭐⭐ 极佳  /  ⭐⭐⭐⭐ 良好  /  ⭐⭐⭐ 一般  /  ⭐⭐ 较差  /  ⭐ 不推荐
+Finally, give an overall rating (choose one):
+⭐⭐⭐⭐⭐ Excellent  /  ⭐⭐⭐⭐ Good  /  ⭐⭐⭐ Average  /  ⭐⭐ Poor  /  ⭐ Not Recommended
 
 ---
-⚠️ 免责声明：此分析仅供教育参考，不构成投资建议。投资有风险，入市需谨慎。"""
+⚠️ Disclaimer: This analysis is for educational purposes only and does not constitute investment advice. Investing involves risk."""
 
 
 # ── Session state init ────────────────────────────────────────────
@@ -231,40 +231,40 @@ for key, default in [
 
 
 # ── Search section ────────────────────────────────────────────────
-st.subheader("🔍 搜索股票")
+st.subheader("🔍 Search Stocks")
 col_input, col_btn = st.columns([5, 1])
 with col_input:
     query = st.text_input(
         "search",
-        placeholder="输入股票代码或公司名称（如 Tesla、NVDA、苹果）",
+        placeholder="Enter ticker or company name (e.g. Tesla, NVDA, Apple)",
         label_visibility="collapsed",
     )
 with col_btn:
-    search_clicked = st.button("搜索", use_container_width=True)
+    search_clicked = st.button("Search", use_container_width=True)
 
 if search_clicked:
     if query.strip():
-        with st.spinner("搜索中..."):
+        with st.spinner("Searching..."):
             st.session_state.search_matches = search_ticker(query.strip())
         if not st.session_state.search_matches:
-            st.warning(f"未找到「{query}」的结果，请尝试其他名称或代码。")
+            st.warning(f"No results found for \"{query}\". Try a different name or ticker.")
     else:
-        st.warning("请输入搜索关键词。")
+        st.warning("Please enter a search term.")
 
 if st.session_state.search_matches:
     options = {
         f"{m['ticker']} — {m['name']} ({m['exchange']})": m["ticker"]
         for m in st.session_state.search_matches
     }
-    choice = st.selectbox("选择股票", list(options.keys()))
+    choice = st.selectbox("Select a stock", list(options.keys()))
     st.session_state.selected_ticker = options[choice]
 
 ticker = st.session_state.selected_ticker
-st.markdown(f"**当前选中：** `{ticker}`")
+st.markdown(f"**Selected:** `{ticker}`")
 
 # ── Analyze button ────────────────────────────────────────────────
-if st.button("📊 开始分析", type="primary"):
-    with st.spinner(f"正在获取 {ticker} 的数据，请稍候..."):
+if st.button("📊 Analyze", type="primary"):
+    with st.spinner(f"Fetching data for {ticker}, please wait..."):
         st.session_state.price_data = get_stock_price(ticker)
         st.session_state.fund = get_fundamentals(ticker)
         st.session_state.long_hist = get_long_history(ticker)
@@ -281,34 +281,34 @@ if st.session_state.data_loaded:
     buffett_score = sum(1 for c in checks if c["passed"])
 
     tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-        "📋 公司概览",
-        "🚦 基本面健康",
-        "📊 财务趋势",
-        "✅ 巴菲特清单",
-        "💰 历史回报模拟",
-        "🤖 AI 分析",
+        "📋 Overview",
+        "🚦 Fundamentals",
+        "📊 Financial Trends",
+        "✅ Buffett Checklist",
+        "💰 Return Simulator",
+        "🤖 AI Analysis",
     ])
 
-    # ── Tab 1: 公司概览 ──────────────────────────────────────────
+    # ── Tab 1: Overview ──────────────────────────────────────────
     with tab1:
         st.subheader(fund.get("name", ticker))
 
         c1, c2, c3, c4 = st.columns(4)
-        c1.metric("当前股价", f"${price_data['price']}" if price_data["price"] else "N/A")
-        c2.metric("市值", fmt_num(fund.get("market_cap")))
-        c3.metric("行业", fund.get("sector", "N/A"))
+        c1.metric("Current Price", f"${price_data['price']}" if price_data["price"] else "N/A")
+        c2.metric("Market Cap", fmt_num(fund.get("market_cap")))
+        c3.metric("Sector", fund.get("sector", "N/A"))
         score_label = "⭐" * buffett_score if buffett_score > 0 else "—"
-        c4.metric("巴菲特评分", f"{buffett_score}/6  {score_label}")
+        c4.metric("Buffett Score", f"{buffett_score}/6  {score_label}")
 
         desc = fund.get("description", "")
         if desc:
-            with st.expander("公司简介", expanded=True):
+            with st.expander("Company Description", expanded=True):
                 st.write(desc)
 
-    # ── Tab 2: 基本面健康 ────────────────────────────────────────
+    # ── Tab 2: Fundamentals ──────────────────────────────────────
     with tab2:
-        st.subheader("🚦 基本面健康指标")
-        st.caption("🟢 优秀  ·  🟡 一般  ·  🔴 需注意  ·  ⚪ 数据暂缺")
+        st.subheader("🚦 Fundamental Health Indicators")
+        st.caption("🟢 Excellent  ·  🟡 Average  ·  🔴 Caution  ·  ⚪ No data")
         st.divider()
 
         metric_keys = list(METRIC_INFO.keys())
@@ -319,16 +319,16 @@ if st.session_state.data_loaded:
                     label, fmt_fn, explain = METRIC_INFO[key]
                     value = fund.get(key)
                     emoji, sig_label = traffic_light(key, value)
-                    display_val = fmt_fn(value) if value is not None else "暂无数据"
+                    display_val = fmt_fn(value) if value is not None else "No data"
                     st.markdown(f"**{emoji} {label}**")
                     st.markdown(f"## {display_val}")
                     st.caption(f"**{sig_label}** — {explain}")
                     st.write("")
 
-    # ── Tab 3: 财务趋势 ──────────────────────────────────────────
+    # ── Tab 3: Financial Trends ──────────────────────────────────
     with tab3:
-        st.subheader("📊 多年财务趋势")
-        st.caption("只看股价涨跌不够——看公司多年能赚多少钱，才是价值投资的核心。")
+        st.subheader("📊 Multi-Year Financial Trends")
+        st.caption("Stock price alone isn't enough — seeing how much a company earns over time is the core of value investing.")
 
         rev = fin_hist.get("revenue")
         ni = fin_hist.get("net_income")
@@ -337,7 +337,7 @@ if st.session_state.data_loaded:
             col_r, col_n = st.columns(2)
 
             with col_r:
-                st.markdown("**年营收趋势**")
+                st.markdown("**Annual Revenue**")
                 dates = [str(d.year) if hasattr(d, "year") else str(d) for d in rev.index]
                 fig = go.Figure(go.Bar(
                     x=dates,
@@ -347,7 +347,7 @@ if st.session_state.data_loaded:
                     textposition="auto",
                 ))
                 fig.update_layout(
-                    title="年营收（十亿美元）",
+                    title="Annual Revenue (Billions USD)",
                     yaxis_title="$B",
                     height=340,
                     showlegend=False,
@@ -356,7 +356,7 @@ if st.session_state.data_loaded:
 
             if ni is not None and not ni.empty:
                 with col_n:
-                    st.markdown("**年净利润趋势**")
+                    st.markdown("**Annual Net Income**")
                     dates_ni = [str(d.year) if hasattr(d, "year") else str(d) for d in ni.index]
                     colors = ["#4CAF50" if v >= 0 else "#F44336" for v in ni.values]
                     fig2 = go.Figure(go.Bar(
@@ -367,7 +367,7 @@ if st.session_state.data_loaded:
                         textposition="auto",
                     ))
                     fig2.update_layout(
-                        title="年净利润（十亿美元）",
+                        title="Annual Net Income (Billions USD)",
                         yaxis_title="$B",
                         height=340,
                         showlegend=False,
@@ -377,25 +377,25 @@ if st.session_state.data_loaded:
             rg = fund.get("revenue_growth")
             if rg is not None:
                 direction = "📈" if rg > 0 else "📉"
-                st.info(f"{direction} 最近一年营收同比增长：**{rg*100:+.1f}%**")
+                st.info(f"{direction} Year-over-year revenue growth: **{rg*100:+.1f}%**")
         else:
-            st.info("暂时无法获取该公司的历史财务数据。")
+            st.info("Historical financial data is not available for this company.")
 
-    # ── Tab 4: 巴菲特清单 ────────────────────────────────────────
+    # ── Tab 4: Buffett Checklist ──────────────────────────────────
     with tab4:
-        st.subheader("✅ 巴菲特式投资检查清单")
+        st.subheader("✅ Buffett-Style Investment Checklist")
 
         score_emoji = "🟢" if buffett_score >= 5 else ("🟡" if buffett_score >= 3 else "🔴")
         score_desc = {
-            6: "极佳 — 高度符合价值投资标准",
-            5: "良好 — 基本符合价值投资标准",
-            4: "一般 — 有亮点也有明显缺陷",
-            3: "偏弱 — 需要谨慎评估",
-            2: "较差 — 大部分标准不达标",
-            1: "不推荐 — 几乎不符合价值投资要求",
-            0: "不推荐 — 完全不符合价值投资标准",
+            6: "Excellent — Highly meets value investing standards",
+            5: "Good — Mostly meets value investing standards",
+            4: "Average — Some strengths but notable weaknesses",
+            3: "Below Average — Needs careful evaluation",
+            2: "Poor — Fails most criteria",
+            1: "Not Recommended — Barely meets value investing requirements",
+            0: "Not Recommended — Does not meet value investing standards",
         }
-        st.markdown(f"### {score_emoji} 综合得分：{buffett_score} / 6")
+        st.markdown(f"### {score_emoji} Overall Score: {buffett_score} / 6")
         st.caption(score_desc.get(buffett_score, ""))
         st.divider()
 
@@ -404,13 +404,13 @@ if st.session_state.data_loaded:
             with st.expander(f"{icon} {c['name']}  —  {c['detail']}"):
                 st.caption(f"💡 {c['tip']}")
 
-    # ── Tab 5: 历史回报模拟 ──────────────────────────────────────
+    # ── Tab 5: Return Simulator ───────────────────────────────────
     with tab5:
-        st.subheader("💰 如果当年买入……")
-        st.caption("用真实历史数据感受长期持有的复利力量。")
+        st.subheader("💰 What If You Had Bought...")
+        st.caption("Use real historical data to feel the power of compounding over the long term.")
 
         if long_hist is None or long_hist.empty:
-            st.info("暂时无法获取该股票的长期历史数据。")
+            st.info("Long-term historical data is not available for this stock.")
         else:
             years_available = max(1, int((long_hist.index[-1] - long_hist.index[0]).days / 365))
             max_years = min(10, years_available)
@@ -418,14 +418,14 @@ if st.session_state.data_loaded:
             col_ctrl, col_chart = st.columns([1, 2])
             with col_ctrl:
                 amount = st.number_input(
-                    "投资金额 (USD)",
+                    "Investment Amount (USD)",
                     min_value=100,
                     max_value=1_000_000,
                     value=1000,
                     step=500,
                 )
                 years = st.slider(
-                    "N 年前买入",
+                    "Years Ago",
                     min_value=1,
                     max_value=max_years,
                     value=min(5, max_years),
@@ -444,13 +444,13 @@ if st.session_state.data_loaded:
 
                 with col_ctrl:
                     st.divider()
-                    st.metric("当时买入价", f"${buy_price:.2f}")
+                    st.metric("Purchase Price", f"${buy_price:.2f}")
                     st.metric(
-                        "今日市值",
+                        "Current Value",
                         f"${current_value:,.0f}",
                         delta=f"{total_return:+.1f}%",
                     )
-                    st.metric("年化回报率", f"{annualized:.1f}%")
+                    st.metric("Annualized Return", f"{annualized:.1f}%")
 
                 with col_chart:
                     fig = go.Figure()
@@ -458,7 +458,7 @@ if st.session_state.data_loaded:
                         x=past_data.index,
                         y=past_data["Close"],
                         mode="lines",
-                        name="股价",
+                        name="Price",
                         fill="tozeroy",
                         line=dict(color="#2196F3"),
                     ))
@@ -466,30 +466,30 @@ if st.session_state.data_loaded:
                         y=buy_price,
                         line_dash="dash",
                         line_color="green",
-                        annotation_text=f"买入价 ${buy_price:.2f}",
+                        annotation_text=f"Buy price ${buy_price:.2f}",
                     )
                     fig.update_layout(
-                        title=f"{ticker} 近 {years} 年股价走势",
-                        xaxis_title="日期",
-                        yaxis_title="价格 (USD)",
+                        title=f"{ticker} Price — Last {years} Year(s)",
+                        xaxis_title="Date",
+                        yaxis_title="Price (USD)",
                         height=380,
                         showlegend=False,
                     )
                     st.plotly_chart(fig, use_container_width=True)
 
-    # ── Tab 6: AI 分析 ───────────────────────────────────────────
+    # ── Tab 6: AI Analysis ────────────────────────────────────────
     with tab6:
-        st.subheader("🤖 AI 价值投资分析报告")
-        st.caption("由 Claude AI 生成，结合所有基本面数据，用新手友好的语言解读这只股票。")
+        st.subheader("🤖 AI Value Investing Report")
+        st.caption("Generated by Claude AI — combines all fundamental data into a beginner-friendly stock analysis.")
 
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
-            st.warning("需要设置环境变量 `ANTHROPIC_API_KEY` 才能使用此功能。")
+            st.warning("Set the `ANTHROPIC_API_KEY` environment variable to use this feature.")
             st.code("export ANTHROPIC_API_KEY=your_api_key_here", language="bash")
-            st.info("💡 还没有 API Key？前往 [console.anthropic.com](https://console.anthropic.com) 免费申请。")
+            st.info("💡 Don't have an API key? Get one free at [console.anthropic.com](https://console.anthropic.com).")
         else:
-            if st.button("✨ 生成 AI 分析报告", type="primary"):
-                with st.spinner("Claude 正在分析中，请稍候（约10-20秒）..."):
+            if st.button("✨ Generate AI Report", type="primary"):
+                with st.spinner("Claude is analyzing... please wait (~10-20 seconds)..."):
                     try:
                         import anthropic
                         client = anthropic.Anthropic(api_key=api_key)
@@ -501,7 +501,7 @@ if st.session_state.data_loaded:
                         )
                         st.markdown(message.content[0].text)
                     except Exception as e:
-                        st.error(f"AI 分析生成失败：{e}")
+                        st.error(f"Failed to generate AI report: {e}")
 
 st.divider()
-st.caption("📈 Built with Claude + Python  ·  数据来源：Yahoo Finance  ·  仅供学习参考，不构成投资建议")
+st.caption("📈 Built with Claude + Python  ·  Data from Yahoo Finance  ·  For educational purposes only, not investment advice")
