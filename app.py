@@ -1,10 +1,10 @@
+import json
 import os
 from datetime import datetime
 
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from supabase import create_client
 
 from stock import (
     get_fundamentals,
@@ -366,75 +366,63 @@ Finally, give an overall rating (choose one):
 ⚠️ Disclaimer: This analysis is for educational purposes only and does not constitute investment advice. Investing involves risk."""
 
 
-# ── Supabase setup ────────────────────────────────────────────────
+# ── File-based user data storage ─────────────────────────────────
 
-@st.cache_resource
-def get_supabase():
-    url = st.secrets["SUPABASE_URL"]
-    key = st.secrets["SUPABASE_KEY"]
-    return create_client(url, key)
+DATA_FILE = os.path.join(os.path.dirname(__file__), "user_data.json")
+
+
+def _load_all():
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+
+def _save_all(data):
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f, indent=2)
 
 
 def load_user_data(username):
-    """Load watchlist and journal from Supabase into session state."""
-    try:
-        sb = get_supabase()
-        wl = sb.table("watchlist").select("ticker").eq("username", username).execute()
-        jl = sb.table("journal").select("ticker, notes, updated_at").eq("username", username).execute()
-        st.session_state.watchlist = [r["ticker"] for r in wl.data]
-        st.session_state.journal = {
-            r["ticker"]: {
-                "notes": r["notes"] or "",
-                "timestamp": r["updated_at"][:16].replace("T", " "),
-            }
-            for r in jl.data
-        }
-    except Exception:
-        pass  # Supabase not configured yet
+    """Load this user's watchlist and journal into session state."""
+    data = _load_all()
+    user = data.get(username, {"watchlist": [], "journal": {}})
+    st.session_state.watchlist = user.get("watchlist", [])
+    st.session_state.journal = user.get("journal", {})
 
 
 def db_add_watchlist(username, ticker):
-    try:
-        sb = get_supabase()
-        sb.table("watchlist").upsert({"username": username, "ticker": ticker}).execute()
-    except Exception:
-        pass
+    data = _load_all()
+    user = data.setdefault(username, {"watchlist": [], "journal": {}})
+    if ticker not in user["watchlist"]:
+        user["watchlist"].append(ticker)
+    _save_all(data)
     if ticker not in st.session_state.watchlist:
         st.session_state.watchlist.append(ticker)
 
 
 def db_remove_watchlist(username, ticker):
-    try:
-        sb = get_supabase()
-        sb.table("watchlist").delete().eq("username", username).eq("ticker", ticker).execute()
-    except Exception:
-        pass
+    data = _load_all()
+    user = data.setdefault(username, {"watchlist": [], "journal": {}})
+    user["watchlist"] = [t for t in user["watchlist"] if t != ticker]
+    _save_all(data)
     st.session_state.watchlist = [t for t in st.session_state.watchlist if t != ticker]
 
 
 def db_save_journal(username, ticker, notes):
-    try:
-        sb = get_supabase()
-        sb.table("journal").upsert({
-            "username": username,
-            "ticker": ticker,
-            "notes": notes,
-            "updated_at": datetime.now().isoformat(),
-        }).execute()
-    except Exception:
-        pass
-    st.session_state.journal[ticker] = {
-        "notes": notes,
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
-    }
+    data = _load_all()
+    user = data.setdefault(username, {"watchlist": [], "journal": {}})
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    user["journal"][ticker] = {"notes": notes, "timestamp": now}
+    _save_all(data)
+    st.session_state.journal[ticker] = {"notes": notes, "timestamp": now}
 
 
 def db_delete_journal(username, ticker):
-    try:
-        sb = get_supabase()
-        sb.table("journal").delete().eq("username", username).eq("ticker", ticker).execute()
-    except Exception:
-        pass
+    data = _load_all()
+    user = data.setdefault(username, {"watchlist": [], "journal": {}})
+    user["journal"].pop(ticker, None)
+    _save_all(data)
     st.session_state.journal.pop(ticker, None)
 
 

@@ -2,4 +2,3 @@ streamlit
 plotly
 yfinance
 anthropic
-supabase
