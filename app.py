@@ -4,6 +4,7 @@ from datetime import datetime
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from supabase import create_client
 
 from stock import (
     get_fundamentals,
@@ -365,6 +366,78 @@ Finally, give an overall rating (choose one):
 ⚠️ Disclaimer: This analysis is for educational purposes only and does not constitute investment advice. Investing involves risk."""
 
 
+# ── Supabase setup ────────────────────────────────────────────────
+
+@st.cache_resource
+def get_supabase():
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
+    return create_client(url, key)
+
+
+def load_user_data(username):
+    """Load watchlist and journal from Supabase into session state."""
+    try:
+        sb = get_supabase()
+        wl = sb.table("watchlist").select("ticker").eq("username", username).execute()
+        jl = sb.table("journal").select("ticker, notes, updated_at").eq("username", username).execute()
+        st.session_state.watchlist = [r["ticker"] for r in wl.data]
+        st.session_state.journal = {
+            r["ticker"]: {
+                "notes": r["notes"] or "",
+                "timestamp": r["updated_at"][:16].replace("T", " "),
+            }
+            for r in jl.data
+        }
+    except Exception:
+        pass  # Supabase not configured yet
+
+
+def db_add_watchlist(username, ticker):
+    try:
+        sb = get_supabase()
+        sb.table("watchlist").upsert({"username": username, "ticker": ticker}).execute()
+    except Exception:
+        pass
+    if ticker not in st.session_state.watchlist:
+        st.session_state.watchlist.append(ticker)
+
+
+def db_remove_watchlist(username, ticker):
+    try:
+        sb = get_supabase()
+        sb.table("watchlist").delete().eq("username", username).eq("ticker", ticker).execute()
+    except Exception:
+        pass
+    st.session_state.watchlist = [t for t in st.session_state.watchlist if t != ticker]
+
+
+def db_save_journal(username, ticker, notes):
+    try:
+        sb = get_supabase()
+        sb.table("journal").upsert({
+            "username": username,
+            "ticker": ticker,
+            "notes": notes,
+            "updated_at": datetime.now().isoformat(),
+        }).execute()
+    except Exception:
+        pass
+    st.session_state.journal[ticker] = {
+        "notes": notes,
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    }
+
+
+def db_delete_journal(username, ticker):
+    try:
+        sb = get_supabase()
+        sb.table("journal").delete().eq("username", username).eq("ticker", ticker).execute()
+    except Exception:
+        pass
+    st.session_state.journal.pop(ticker, None)
+
+
 # ── Glossary data ─────────────────────────────────────────────────
 GLOSSARY = [
     {"term": "P/E Ratio (Price-to-Earnings)", "definition": "How much investors pay for $1 of a company's annual profit. A P/E of 20 means paying $20 per $1 of earnings.", "analogy": "Like buying a lemonade stand that earns $1/year. If you pay $20 for it, your P/E is 20. Lower is generally cheaper."},
@@ -397,13 +470,35 @@ for key, default in [
     ("spy_hist", None),
     ("watchlist", []),
     ("journal", {}),
+    ("username", ""),
+    ("username_loaded", False),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
 
 
-# ── Sidebar: Watchlist ────────────────────────────────────────────
+# ── Sidebar: Username + Watchlist ────────────────────────────────
 with st.sidebar:
+    st.header("👤 Your Account")
+    username_input = st.text_input(
+        "Username",
+        placeholder="Enter any name (e.g. john)",
+        value=st.session_state.username,
+        label_visibility="collapsed",
+    )
+    if username_input != st.session_state.username:
+        st.session_state.username = username_input
+        st.session_state.username_loaded = False
+
+    if st.session_state.username:
+        if not st.session_state.username_loaded:
+            load_user_data(st.session_state.username)
+            st.session_state.username_loaded = True
+        st.success(f"👋 Welcome, **{st.session_state.username}**!")
+    else:
+        st.warning("Enter a username to save your watchlist & journal across devices.")
+
+    st.divider()
     st.header("⭐ My Watchlist")
     if st.session_state.watchlist:
         for t in list(st.session_state.watchlist):
@@ -415,7 +510,7 @@ with st.sidebar:
                     st.rerun()
             with col_rm:
                 if st.button("✕", key=f"wl_rm_{t}"):
-                    st.session_state.watchlist = [x for x in st.session_state.watchlist if x != t]
+                    db_remove_watchlist(st.session_state.username, t)
                     st.rerun()
     else:
         st.caption("No stocks added yet. Analyze a stock and click ⭐ Add to Watchlist.")
@@ -532,12 +627,12 @@ if st.session_state.data_loaded:
         st.write("")
         if ticker not in st.session_state.watchlist:
             if st.button("⭐ Add to Watchlist"):
-                st.session_state.watchlist.append(ticker)
+                db_add_watchlist(st.session_state.username, ticker)
                 st.success(f"{ticker} added to your watchlist!")
                 st.rerun()
         else:
             if st.button("★ Remove from Watchlist"):
-                st.session_state.watchlist = [x for x in st.session_state.watchlist if x != ticker]
+                db_remove_watchlist(st.session_state.username, ticker)
                 st.rerun()
 
         desc = fund.get("description", "")
@@ -848,15 +943,12 @@ if st.session_state.data_loaded:
         col_save, col_del = st.columns([1, 1])
         with col_save:
             if st.button("💾 Save Notes", type="primary"):
-                st.session_state.journal[ticker] = {
-                    "notes": notes_input,
-                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                }
+                db_save_journal(st.session_state.username, ticker, notes_input)
                 st.success("Notes saved!")
         with col_del:
             if ticker in st.session_state.journal:
                 if st.button("🗑 Delete Notes"):
-                    del st.session_state.journal[ticker]
+                    db_delete_journal(st.session_state.username, ticker)
                     st.rerun()
 
         if st.session_state.journal:
